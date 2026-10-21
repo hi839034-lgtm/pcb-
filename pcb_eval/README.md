@@ -48,3 +48,9 @@ python src/analyze.py results/results.csv --model base --mode none --reference b
 - 마커 인식 실패 프레임은 평가에서 제외되며 개수가 출력된다.
 - 조건당 이미지가 적으므로 신뢰구간이 겹치면 차이를 단정하지 않는다.
 
+
+## Colab 학습 (GPU)
+`pcb_eval/colab/colab_train.ipynb` 를 Colab 에서 열면 된다
+([열기](https://colab.research.google.com/github/hi839034-lgtm/pcb-/blob/main/pcb_eval/colab/colab_train.ipynb)).
+필요한 것은 원본 `pcb-component-detection-DatasetNinja.tar` 하나뿐이며, 노트북이 코드를 GitHub 에서 받고
+영상 단위 분할(`prepare_dataset.py`)을 직접 재현한다. PC 의 test 영상 7개와 일치하는지 자동 검증한다.
