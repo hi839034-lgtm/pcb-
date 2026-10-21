@@ -1,0 +1,11 @@
+﻿raw_dataset/
+tmp/
+pcb_eval/data/
+pcb_eval/runs/
+pcb_eval/results/gt_overlay/
+pcb_eval/colab/*.zip
+__pycache__/
+*.pt
+*.tar
+
+pcb_eval/train/runs/
