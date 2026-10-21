@@ -32,6 +32,8 @@ def main():
     ap.add_argument("--win-y", type=int, default=0)
     ap.add_argument("--settle", type=float, default=0.8, help="화면 전환 후 대기(초)")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--backend", choices=["auto", "dshow", "msmf"], default="auto",
+                    help="영상이 검정이면 dshow 또는 msmf 로 바꿔 시도 (Windows 가상 카메라용)")
     args = ap.parse_args()
 
     with open(os.path.join(args.canvases, "canvas_manifest.csv"), newline="", encoding="utf-8") as f:
@@ -40,11 +42,18 @@ def main():
         rows = rows[:args.limit]
     os.makedirs(args.out, exist_ok=True)
 
-    cap = cv2.VideoCapture(args.source)
+    api = {"auto": cv2.CAP_ANY, "dshow": cv2.CAP_DSHOW, "msmf": cv2.CAP_MSMF}[args.backend]
+    cap = cv2.VideoCapture(args.source, api)
     if not cap.isOpened():
-        raise SystemExit("웹캠을 열 수 없음")
+        raise SystemExit("웹캠을 열 수 없음 (--source 번호 또는 --backend 를 바꿔 보세요)")
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    for _ in range(30):          # 자동 노출/초점이 안정될 때까지 버림
+        cap.read()
+    ok, probe = cap.read()
+    print("카메라 첫 프레임:", "읽기 실패" if not ok else f"{probe.shape[1]}x{probe.shape[0]}, 평균 밝기 {probe.mean():.1f}")
+    if ok and probe.mean() < 2:
+        print("※ 영상이 검정입니다: Camo 프로그램이 켜져 연결돼 있는지 확인하고, --backend dshow 또는 msmf 로 다시 시도하세요.")
 
     win = "canvas"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
