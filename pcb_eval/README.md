@@ -52,5 +52,6 @@ python src/analyze.py results/results.csv --model base --mode none --reference b
 ## Colab 학습 (GPU)
 `pcb_eval/colab/colab_train.ipynb` 를 Colab 에서 열면 된다
 ([열기](https://colab.research.google.com/github/hi839034-lgtm/pcb-/blob/main/pcb_eval/colab/colab_train.ipynb)).
-필요한 것은 원본 `pcb-component-detection-DatasetNinja.tar` 하나뿐이며, 노트북이 코드를 GitHub 에서 받고
+업로드할 파일은 없다. 노트북이 코드를 GitHub 에서, 데이터를 Kaggle(`animeshkumarnayak/pcb-fault-detection`)에서 받고
 영상 단위 분할(`prepare_dataset.py`)을 직접 재현한다. PC 의 test 영상 7개와 일치하는지 자동 검증한다.
+

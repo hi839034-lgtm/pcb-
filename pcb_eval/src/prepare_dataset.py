@@ -56,6 +56,46 @@ def load_ann(path):
     return rows
 
 
+KAGGLE_NAMES = ["Cap1", "Cap2", "Cap3", "Cap4", "MOSFET", "Mov", "Resestor", "Resistor", "Transformer"]
+
+
+def load_yolo_ann(path):
+    """Kaggle 판(이미 YOLO 형식, 9클래스 번호) 라벨을 8클래스 번호로 바꿔 읽는다"""
+    rows = []
+    for line in open(path, encoding="utf-8"):
+        p = line.split()
+        if len(p) != 5:
+            continue
+        name = CLASS_MERGE.get(KAGGLE_NAMES[int(p[0])], KAGGLE_NAMES[int(p[0])])
+        rows.append((CLASSES.index(name), *map(float, p[1:])))
+    return rows
+
+
+def collect_items(raw):
+    """원본 폴더 형식을 자동 인식해 라벨이 있는 (train+validation) 이미지 목록을 만든다.
+       - DatasetNinja : raw/{train,validation}/{ann,img}  (meta.json 존재)
+       - Kaggle(pcb-fault-detection) : raw/Data/{train,validation}/{images,labels}"""
+    items = []
+    kaggle_root = os.path.join(raw, "Data") if os.path.isdir(os.path.join(raw, "Data")) else raw
+    if os.path.isdir(os.path.join(kaggle_root, "train", "labels")):
+        print("형식: Kaggle (YOLO)")
+        for split in ("train", "validation"):
+            for img in sorted(glob.glob(os.path.join(kaggle_root, split, "images", "*.jpg"))):
+                lab = os.path.join(kaggle_root, split, "labels", os.path.basename(img)[:-4] + ".txt")
+                rows = load_yolo_ann(lab) if os.path.exists(lab) else []
+                if rows:
+                    items.append(dict(img=img, rows=rows, vid=video_id(img), frame=frame_id(img)))
+    else:
+        print("형식: DatasetNinja")
+        for split in ("train", "validation"):
+            for a in sorted(glob.glob(os.path.join(raw, split, "ann", "*.json"))):
+                rows = load_ann(a)
+                if rows:
+                    img = os.path.join(raw, split, "img", os.path.basename(a)[:-5])
+                    items.append(dict(img=img, rows=rows, vid=video_id(a), frame=frame_id(a)))
+    return items
+
+
 def black_ratio(img_path):
     im = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     return float(np.mean(im < 8))
@@ -71,14 +111,7 @@ def main():
     args = ap.parse_args()
 
     # 라벨이 있는 이미지만 수집 (원본 train + validation)
-    items = []
-    for split in ("train", "validation"):
-        for a in sorted(glob.glob(os.path.join(args.raw, split, "ann", "*.json"))):
-            rows = load_ann(a)
-            if not rows:
-                continue
-            img = os.path.join(args.raw, split, "img", os.path.basename(a)[:-5])
-            items.append(dict(ann=a, img=img, rows=rows, vid=video_id(a), frame=frame_id(a)))
+    items = collect_items(args.raw)
 
     vids = sorted({it["vid"] for it in items})
     print(f"라벨 있는 이미지 {len(items)}장 / 영상 {len(vids)}개")
